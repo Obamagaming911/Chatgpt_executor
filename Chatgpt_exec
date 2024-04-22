@@ -1,0 +1,127 @@
+-- Local player script with draggable GUI for adjusting speed, jump power, ESP, and executing scripts
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+-- Function to create GUI
+local function createGUI()
+    local gui = Instance.new("ScreenGui")
+    gui.Parent = player.PlayerGui
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 200, 0, 300)
+    frame.Position = UDim2.new(0.5, -100, 0, 50)
+    frame.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    frame.Active = true -- Enable for mobile drag
+    frame.Draggable = true -- Make draggable
+    frame.Parent = gui
+
+    local speedLabel = Instance.new("TextLabel")
+    speedLabel.Size = UDim2.new(0, 100, 0, 30)
+    speedLabel.Position = UDim2.new(0.5, -50, 0, 10)
+    speedLabel.Text = "Speed:"
+    speedLabel.TextColor3 = Color3.new(1, 1, 1)
+    speedLabel.Parent = frame
+
+    local speedTextBox = Instance.new("TextBox")
+    speedTextBox.Size = UDim2.new(0, 100, 0, 30)
+    speedTextBox.Position = UDim2.new(0.5, -50, 0, 40)
+    speedTextBox.Parent = frame
+
+    local jumpLabel = Instance.new("TextLabel")
+    jumpLabel.Size = UDim2.new(0, 100, 0, 30)
+    jumpLabel.Position = UDim2.new(0.5, -50, 0, 80)
+    jumpLabel.Text = "Jump Power:"
+    jumpLabel.TextColor3 = Color3.new(1, 1, 1)
+    jumpLabel.Parent = frame
+
+    local jumpTextBox = Instance.new("TextBox")
+    jumpTextBox.Size = UDim2.new(0, 100, 0, 30)
+    jumpTextBox.Position = UDim2.new(0.5, -50, 0, 110)
+    jumpTextBox.Parent = frame
+
+    local espToggle = Instance.new("TextButton")
+    espToggle.Size = UDim2.new(0, 100, 0, 30)
+    espToggle.Position = UDim2.new(0.5, -50, 0, 140)
+    espToggle.Text = "ESP: Off"
+    espToggle.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+    espToggle.TextColor3 = Color3.new(1, 1, 1)
+    espToggle.Parent = frame
+    local espEnabled = false
+    espToggle.MouseButton1Click:Connect(function()
+        espEnabled = not espEnabled
+        espToggle.Text = "ESP: " .. (espEnabled and "On" or "Off")
+        -- Call ESP function here based on espEnabled value
+    end)
+
+    local scriptLabel = Instance.new("TextLabel")
+    scriptLabel.Size = UDim2.new(0, 100, 0, 30)
+    scriptLabel.Position = UDim2.new(0.5, -50, 0, 170)
+    scriptLabel.Text = "Script:"
+    scriptLabel.TextColor3 = Color3.new(1, 1, 1)
+    scriptLabel.Parent = frame
+
+    local scriptTextBox = Instance.new("TextBox")
+    scriptTextBox.Size = UDim2.new(0, 150, 0, 30)
+    scriptTextBox.Position = UDim2.new(0.5, -75, 0, 200)
+    scriptTextBox.Parent = frame
+
+    local executeButton = Instance.new("TextButton")
+    executeButton.Size = UDim2.new(0, 100, 0, 30)
+    executeButton.Position = UDim2.new(0.5, -50, 0, 240)
+    executeButton.Text = "Execute"
+    executeButton.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+    executeButton.TextColor3 = Color3.new(1, 1, 1)
+    executeButton.Parent = frame
+    executeButton.MouseButton1Click:Connect(function()
+        local script = scriptTextBox.Text
+        if script ~= "" then
+            local success, errorMsg = pcall(loadstring(script))
+            if not success then
+                warn("Error executing script:", errorMsg)
+            end
+        end
+    end)
+
+    local exitButton = Instance.new("TextButton")
+    exitButton.Size = UDim2.new(0, 100, 0, 30)
+    exitButton.Position = UDim2.new(0.5, -50, 0, 280)
+    exitButton.Text = "Exit"
+    exitButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+    exitButton.TextColor3 = Color3.new(1, 1, 1)
+    exitButton.Parent = frame
+    exitButton.MouseButton1Click:Connect(function()
+        gui:Destroy()
+    end)
+
+    return speedTextBox, jumpTextBox
+end
+
+-- Function to adjust speed and jump power
+local function adjustStats(speed, jumpPower)
+    humanoid.WalkSpeed = speed
+    humanoid.JumpPower = jumpPower
+end
+
+-- Create GUI
+local speedTextBox, jumpTextBox = createGUI()
+
+-- Event handler for changes in speed and jump power
+speedTextBox.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        local newSpeed = tonumber(speedTextBox.Text)
+        if newSpeed then
+            adjustStats(newSpeed, humanoid.JumpPower)
+        end
+    end
+end)
+
+jumpTextBox.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        local newJumpPower = tonumber(jumpTextBox.Text)
+        if newJumpPower then
+            adjustStats(humanoid.WalkSpeed, newJumpPower)
+        end
+    end
+end)
